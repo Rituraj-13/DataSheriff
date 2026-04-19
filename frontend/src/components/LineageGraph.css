@@ -1,0 +1,93 @@
+/* LineageGraph.css */
+
+.lineage-graph {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lineage-graph__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.lineage-graph__header h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.lineage-graph__legend {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+}
+
+.legend-item {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.legend-item--failing { color: var(--accent-danger); }
+.legend-item--healthy { color: var(--accent-success); }
+.legend-item--unknown { color: var(--text-muted); }
+
+.lineage-graph__canvas {
+  height: 380px;
+  background: var(--bg-base);
+}
+
+/* Custom ReactFlow node */
+.lineage-node {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  min-width: 160px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lineage-node--failing {
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 16px rgba(248,113,113,0.25);
+}
+
+.lineage-node--healthy {
+  border-color: var(--accent-success);
+  box-shadow: 0 0 12px rgba(52,211,153,0.15);
+}
+
+.lineage-node__type {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.lineage-node__name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.lineage-node__badge {
+  margin-top: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--accent-danger);
+  letter-spacing: 0.05em;
+}
+
+.lineage-node__badge--ok {
+  color: var(--accent-success);
+}
