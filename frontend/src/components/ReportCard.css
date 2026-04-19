@@ -1,0 +1,257 @@
+/* ReportCard.css */
+
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+
+.report-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-wrap: wrap;
+}
+
+.report-card__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-card__icon { font-size: 1.4rem; }
+
+.report-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.report-card__subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.report-card__header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Severity badge */
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.severity--critical { background: rgba(248,113,113,0.18); color: #f87171; border: 1px solid rgba(248,113,113,0.35); }
+.severity--high     { background: rgba(251,191,36,0.18);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); }
+.severity--medium   { background: rgba(124,108,250,0.18); color: #a5b4fc; border: 1px solid rgba(124,108,250,0.35); }
+.severity--low      { background: rgba(52,211,153,0.15);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+
+.report-card__copy-btn {
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 5px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+}
+.report-card__copy-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* ── Root cause highlight ────────────────────────────────────────────────────── */
+
+.report-card__root-cause {
+  margin: 16px 20px;
+  padding: 14px 16px;
+  background: rgba(248, 113, 113, 0.05);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-left: 3px solid var(--accent-danger);
+  border-radius: var(--radius-md);
+}
+
+.report-card__root-cause-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+}
+
+.report-card__root-cause-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+/* ── Field grid ──────────────────────────────────────────────────────────────── */
+
+.report-card__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .report-card__fields { grid-template-columns: 1fr; }
+}
+
+.report-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 20px;
+  background: var(--bg-card);
+}
+
+.report-field__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.report-field__value {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.report-field__value.mono {
+  font-family: var(--font-mono);
+  color: var(--text-code);
+  font-size: 0.76rem;
+}
+
+/* ── Sections ────────────────────────────────────────────────────────────────── */
+
+.report-card__section {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.report-card__section-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+/* Lineage path */
+.report-card__lineage-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.lineage-path-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lineage-path-node {
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  color: var(--text-code);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.lineage-path-arrow {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Failing tests */
+.report-card__tests {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-test-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.report-test-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.report-test-table {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ── Recommended action ──────────────────────────────────────────────────────── */
+
+.report-card__action {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(124, 108, 250, 0.04);
+}
+
+.report-card__action-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.report-card__action-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+  margin-bottom: 4px;
+}
+
+.report-card__action-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.55;
+}
