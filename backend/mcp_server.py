@@ -103,30 +103,22 @@ async def get_lineage(entity_id: str, entity_type: str = "table") -> str:
         )
         nodes = []
         edges = []
-        entity_map = {n["id"]: n for n in data.get("nodes", [])}
 
-        # Add the root entity itself
+        seen_ids = set()
         root = data.get("entity", {})
-        nodes.append(
-            {
-                "id": root.get("id"),
-                "fqn": root.get("fullyQualifiedName"),
-                "name": root.get("name"),
-                "type": entity_type,
-                "is_root": True,
-            }
-        )
+        root_id = root.get("id")
 
         for node in data.get("nodes", []):
-            nodes.append(
-                {
-                    "id": node.get("id"),
+            node_id = node.get("id")
+            if node_id not in seen_ids:
+                seen_ids.add(node_id)
+                nodes.append({
+                    "id": node_id,
                     "fqn": node.get("fullyQualifiedName"),
                     "name": node.get("name"),
                     "type": node.get("type"),
-                    "is_root": False,
-                }
-            )
+                    "is_root": node_id == root_id,  # mark root correctly
+                })
 
         for edge_group in data.get("upstreamEdges", []):
             edges.append(
@@ -175,6 +167,7 @@ async def get_quality_tests(table_fqn: str) -> str:
                 "entityLink": f"<#E::table::{table_fqn}>",
                 "limit": 50,
                 "includeAllTests": True,
+                "fields": "testCaseResult",
             },
         )
         test_cases = tests_data.get("data", [])

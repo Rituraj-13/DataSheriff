@@ -8,12 +8,12 @@ import { useState } from 'react'
 import './HistoryDashboard.css'
 
 const SEVERITY_COLOR = {
-    Critical: { bg: '#FCEBEB', text: '#791F1F', dot: '#E24B4A' },
-    High: { bg: '#FEF3E2', text: '#7C4A00', dot: '#EF9F27' },
-    Medium: { bg: '#FAEEDA', text: '#633806', dot: '#D97706' },
-    Low: { bg: '#E1F5EE', text: '#085041', dot: '#1D9E75' },
-    Unknown: { bg: '#F0F0F8', text: '#555577', dot: '#9898B8' },
-    Error: { bg: '#F0F0F8', text: '#555577', dot: '#9898B8' },
+    Critical: { bg: 'rgba(239,68,68,0.16)', text: '#FCA5A5', dot: '#EF4444' },
+    High: { bg: 'rgba(245,158,11,0.16)', text: '#FCD34D', dot: '#F59E0B' },
+    Medium: { bg: 'rgba(79,140,255,0.16)', text: '#BFDBFE', dot: '#4F8CFF' },
+    Low: { bg: 'rgba(34,197,94,0.16)', text: '#86EFAC', dot: '#22C55E' },
+    Unknown: { bg: 'rgba(148,163,184,0.16)', text: '#CBD5E1', dot: '#94A3B8' },
+    Error: { bg: 'rgba(148,163,184,0.16)', text: '#CBD5E1', dot: '#94A3B8' },
 }
 
 function formatDuration(sec) {

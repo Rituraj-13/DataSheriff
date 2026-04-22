@@ -253,7 +253,7 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
                     except Exception as e:
                         result = json.dumps({"error": str(e)})
 
-                    yield _sse("tool_result", {"tool": tool_name, "result": result[:500]})  # truncate for SSE
+                    yield _sse("tool_result", {"tool": tool_name, "result": result})
 
                     tool_results.append(
                         {

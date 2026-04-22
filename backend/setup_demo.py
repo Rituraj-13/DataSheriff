@@ -151,7 +151,7 @@ if fact_orders_id:
 # Check quality tests exist on dim_address
 test_count, failed_count = 0, 0
 try:
-    test_data = get("/dataQuality/testCases", params={"limit": 50})
+    test_data = get("/dataQuality/testCases", params={"limit": 50, "fields": "testCaseResult"})
     all_tests = test_data.get("data", [])
     test_count = len(all_tests)
     for t in all_tests:
@@ -186,6 +186,31 @@ else:
         print("  OK  Lineage already exists (nothing to do)")
     else:
         print("  WARN HTTP " + str(r.status_code) + ": " + r.text[:150])
+        
+
+# Also find dim_address and link it to fact_orders
+dim_address_id = None
+try:
+    data = get("/tables", params={"limit": 50})
+    for t in data.get("data", []):
+        if t.get("name") == "dim_address":
+            dim_address_id = t.get("id")
+            break
+    if dim_address_id and fact_orders_id:
+        r2 = put("/lineage", {
+            "edge": {
+                "fromEntity": {"id": dim_address_id, "type": "table"},
+                "toEntity":   {"id": fact_orders_id, "type": "table"},
+            }
+        })
+        if r2.status_code in (200, 201):
+            print("  OK  Linked: dim_address -> fact_orders")
+        elif r2.status_code == 409:
+            print("  OK  dim_address -> fact_orders already exists")
+        else:
+            print("  WARN HTTP " + str(r2.status_code))
+except Exception as e:
+    print("  ERROR linking dim_address: " + str(e))
 
 
 # ── Step 4: Verify final state ────────────────────────────────────────────────

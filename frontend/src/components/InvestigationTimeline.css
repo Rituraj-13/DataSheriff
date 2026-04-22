@@ -1,13 +1,14 @@
 /* InvestigationTimeline.css */
 
 .timeline {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, rgba(17, 28, 52, 0.74), rgba(12, 21, 41, 0.74));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  max-height: 480px;
+  max-height: 560px;
+  box-shadow: var(--shadow-sm);
 }
 
 .timeline__header {
@@ -15,46 +16,46 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 16px 20px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-surface);
+  background: rgba(7, 11, 20, 0.54);
   flex-shrink: 0;
 }
 
 .timeline__icon {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .timeline__title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
 
 .timeline__live-badge {
   margin-left: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  color: var(--accent-danger);
-  letter-spacing: 0.1em;
+  color: #fda4af;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .live-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: var(--accent-danger);
   border-radius: 50%;
-  animation: pulse-dot 1s ease infinite;
+  animation: pulse-dot 1.1s ease infinite;
 }
 
 .timeline__steps {
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -63,7 +64,7 @@
 
 .timeline__step {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
 }
 
@@ -81,7 +82,7 @@
   height: 10px;
   border-radius: 50%;
   background: var(--accent-primary);
-  border: 2px solid var(--bg-card);
+  border: 2px solid rgba(9, 14, 28, 0.9);
   flex-shrink: 0;
   transition: background 0.2s;
 }
@@ -95,35 +96,35 @@
 .timeline__step-line {
   width: 2px;
   flex: 1;
-  min-height: 20px;
-  background: var(--border);
+  min-height: 18px;
+  background: rgba(148, 163, 184, 0.28);
   margin-top: 4px;
 }
 
 .timeline__step-content {
   flex: 1;
-  padding-bottom: 20px;
+  padding-bottom: 16px;
 }
 
 .timeline__step-title {
-  font-size: 0.875rem;
+  font-size: 0.84rem;
   font-weight: 500;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.42;
 }
 
 .timeline__step-detail {
   margin-top: 6px;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  background: var(--bg-base);
-  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: #b7c4d8;
+  background: rgba(7, 11, 20, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 7px 9px;
   white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 100px;
+  word-break: break-word;
+  max-height: 110px;
   overflow-y: auto;
   line-height: 1.5;
 }
@@ -151,16 +152,13 @@
   animation-delay: 0.4s;
 }
 
-
-/* ── Paste these at the BOTTOM of your existing InvestigationTimeline.css ── */
-
 /* Confidence bar */
 .confidence-bar {
-  margin: 0 0 1rem;
-  padding: .65rem .9rem;
-  background: var(--color-background-secondary);
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: var(--border-radius-md);
+  margin: 12px 16px 4px;
+  padding: 0.62rem 0.72rem;
+  background: rgba(7, 11, 20, 0.54);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
 }
 
 .confidence-bar__header {
@@ -171,45 +169,44 @@
 }
 
 .confidence-bar__label {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  font-weight: 400;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .confidence-bar__pct {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 0.74rem;
+  font-weight: 700;
   font-family: var(--font-mono);
-  transition: color .4s ease;
+  transition: color 0.3s ease;
 }
 
 .confidence-bar__track {
   position: relative;
-  height: 6px;
-  background: var(--color-background-primary);
-  border-radius: 3px;
-  overflow: visible;
-  border: 0.5px solid var(--color-border-tertiary);
+  height: 8px;
+  background: rgba(12, 21, 41, 0.95);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .confidence-bar__fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 999px;
   min-width: 4px;
 }
 
-/* Animated shimmer pulse at the leading edge while running */
 .confidence-bar__shimmer {
   position: absolute;
   top: -3px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: currentColor;
+  background: rgba(79, 140, 255, 0.86);
   transform: translateX(-50%);
-  animation: confidence-pulse 1.2s ease-in-out infinite;
+  animation: confidence-pulse 1.1s ease-in-out infinite;
   pointer-events: none;
-  opacity: .7;
+  opacity: 0.72;
 }
 
 @keyframes confidence-pulse {
@@ -217,12 +214,12 @@
   0%,
   100% {
     transform: translateX(-50%) scale(1);
-    opacity: .7;
+    opacity: 0.72;
   }
 
   50% {
-    transform: translateX(-50%) scale(1.5);
-    opacity: .3;
+    transform: translateX(-50%) scale(1.48);
+    opacity: 0.28;
   }
 }
 
@@ -232,11 +229,11 @@
   }
 
   .timeline__header {
-    padding: 14px 16px;
+    padding: 13px 14px;
   }
 
   .timeline__steps {
-    padding: 14px 16px;
+    padding: 13px 14px;
   }
 
   .timeline__step {
@@ -248,17 +245,17 @@
   }
 
   .timeline__step-title {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     word-break: break-word;
   }
 
   .timeline__step-detail {
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     max-height: 130px;
   }
 
   .confidence-bar {
-    margin: 0 0 .85rem;
-    padding: .6rem .75rem;
+    margin: 10px 14px 2px;
+    padding: 0.55rem 0.66rem;
   }
 }

@@ -2,6 +2,8 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  Handle,
+  Position, 
   useNodesState,
   useEdgesState,
 } from 'reactflow'
@@ -11,6 +13,28 @@ import './LineageGraph.css'
 
 // ─── Custom Node ──────────────────────────────────────────────────────────────
 
+// function LineageNode({ data }) {
+//   const statusClass = data.status === 'failing'
+//     ? 'lineage-node--failing'
+//     : data.status === 'healthy'
+//       ? 'lineage-node--healthy'
+//       : 'lineage-node--unknown'
+
+//   return (
+//     <div className={`lineage-node ${statusClass}`}>
+//       <div className="lineage-node__type">{data.type}</div>
+//       <div className="lineage-node__name">{data.label}</div>
+//       {data.status === 'failing' && (
+//         <div className="lineage-node__badge">⚠ FAILING</div>
+//       )}
+//       {data.status === 'healthy' && (
+//         <div className="lineage-node__badge lineage-node__badge--ok">✓ OK</div>
+//       )}
+//     </div>
+//   )
+// }
+
+// UPDATE LineageNode to include handles
 function LineageNode({ data }) {
   const statusClass = data.status === 'failing'
     ? 'lineage-node--failing'
@@ -20,6 +44,9 @@ function LineageNode({ data }) {
 
   return (
     <div className={`lineage-node ${statusClass}`}>
+      {/* LEFT handle — receives incoming edges */}
+      <Handle type="target" position={Position.Left} />
+
       <div className="lineage-node__type">{data.type}</div>
       <div className="lineage-node__name">{data.label}</div>
       {data.status === 'failing' && (
@@ -28,6 +55,9 @@ function LineageNode({ data }) {
       {data.status === 'healthy' && (
         <div className="lineage-node__badge lineage-node__badge--ok">✓ OK</div>
       )}
+
+      {/* RIGHT handle — sends outgoing edges */}
+      <Handle type="source" position={Position.Right} />
     </div>
   )
 }

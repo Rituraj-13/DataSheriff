@@ -344,9 +344,10 @@ import './App.css'
 import datasheriff_logo from '../public/datasheriff_logo.png'
 
 const SAMPLE_QUERIES = [
-  'The fact_orders table has missing data since this morning',
-  'dim_address table is failing data quality checks',
-  'raw_order table seems to have missing rows',
+  'dim_address table is failing data quality checks',       // best demo — works immediately
+  'raw_customer table has incorrect data',                  // works immediately  
+  'The orders dashboard is showing wrong data',             // works after setup_demo.py
+  'The fact_orders table has missing data since this morning', // works after setup_demo.py
 ]
 
 const API_BASE = 'http://localhost:8000'
@@ -677,7 +678,7 @@ export default function App() {
                   aria-label="Describe the data incident"
                 />
                 <div className="query-panel__actions">
-                  <span className="query-hint">⌘↵ to submit</span>
+                  <span className="query-hint">Ctrl/⌘ + Enter</span>
                   {isRunning ? (
                     <button
                       id="stop-investigation-btn"
