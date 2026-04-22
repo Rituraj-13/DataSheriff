@@ -13,6 +13,7 @@
 .timeline__header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
@@ -20,7 +21,9 @@
   flex-shrink: 0;
 }
 
-.timeline__icon { font-size: 1.1rem; }
+.timeline__icon {
+  font-size: 1.1rem;
+}
 
 .timeline__title {
   font-size: 0.95rem;
@@ -42,7 +45,8 @@
 }
 
 .live-dot {
-  width: 6px; height: 6px;
+  width: 6px;
+  height: 6px;
   background: var(--accent-danger);
   border-radius: 50%;
   animation: pulse-dot 1s ease infinite;
@@ -73,7 +77,8 @@
 }
 
 .timeline__step-dot {
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--accent-primary);
   border: 2px solid var(--bg-card);
@@ -131,13 +136,20 @@
 }
 
 .timeline__thinking-dots span {
-  width: 6px; height: 6px;
+  width: 6px;
+  height: 6px;
   background: var(--text-muted);
   border-radius: 50%;
   animation: pulse-dot 1.2s ease infinite;
 }
-.timeline__thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-.timeline__thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.timeline__thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.timeline__thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 
 /* ── Paste these at the BOTTOM of your existing InvestigationTimeline.css ── */
@@ -201,7 +213,52 @@
 }
 
 @keyframes confidence-pulse {
-  0%, 100% { transform: translateX(-50%) scale(1);   opacity: .7; }
-  50%       { transform: translateX(-50%) scale(1.5); opacity: .3; }
+
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: .7;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.5);
+    opacity: .3;
+  }
 }
 
+@media (max-width: 768px) {
+  .timeline {
+    max-height: none;
+  }
+
+  .timeline__header {
+    padding: 14px 16px;
+  }
+
+  .timeline__steps {
+    padding: 14px 16px;
+  }
+
+  .timeline__step {
+    gap: 10px;
+  }
+
+  .timeline__step-content {
+    min-width: 0;
+  }
+
+  .timeline__step-title {
+    font-size: 0.82rem;
+    word-break: break-word;
+  }
+
+  .timeline__step-detail {
+    font-size: 0.68rem;
+    max-height: 130px;
+  }
+
+  .confidence-bar {
+    margin: 0 0 .85rem;
+    padding: .6rem .75rem;
+  }
+}

@@ -341,6 +341,7 @@ import ReportCard from './components/ReportCard'
 import HistoryDashboard from './components/HistoryDashboard'
 import { useHistory } from './hooks/useHistory'
 import './App.css'
+import datasheriff_logo from '../public/datasheriff_logo.png'
 
 const SAMPLE_QUERIES = [
   'The fact_orders table has missing data since this morning',
@@ -355,21 +356,21 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('investigate') // 'investigate' | 'history'
 
   // ── Investigation state ──────────────────────────────────────────────────────
-  const [query, setQuery]           = useState('')
-  const [steps, setSteps]           = useState([])
-  const [report, setReport]         = useState(null)
+  const [query, setQuery] = useState('')
+  const [steps, setSteps] = useState([])
+  const [report, setReport] = useState(null)
   const [lineageData, setLineageData] = useState(null)
   const [failingFqns, setFailingFqns] = useState([])
-  const [isRunning, setIsRunning]   = useState(false)
-  const [error, setError]           = useState(null)
+  const [isRunning, setIsRunning] = useState(false)
+  const [error, setError] = useState(null)
   const [confidence, setConfidence] = useState(0)   // 0-100
-  const abortRef                    = useRef(null)
+  const abortRef = useRef(null)
 
   // ── Timing refs (not state — no re-render needed) ───────────────────────────
-  const startedAtRef    = useRef(null)  // Date.now() when investigation began
+  const startedAtRef = useRef(null)  // Date.now() when investigation began
   const currentQueryRef = useRef('')    // query string at start time
-  const reportRef       = useRef(null)  // latest report object
-  const hasErrorRef     = useRef(false) // did investigation end in error
+  const reportRef = useRef(null)  // latest report object
+  const hasErrorRef = useRef(false) // did investigation end in error
 
   // ── History hook ─────────────────────────────────────────────────────────────
   const { history, stats, saveInvestigation, clearHistory } = useHistory()
@@ -380,17 +381,17 @@ export default function App() {
 
       case 'step':
         setSteps(prev => [...prev, {
-          title:  event.title,
+          title: event.title,
           detail: event.detail || '',
           status: 'info',
         }])
         // Bump confidence based on which investigation step just fired
-        if (event.title?.includes('Searching'))       setConfidence(c => Math.max(c, 12))
-        if (event.title?.includes('Traversing'))      setConfidence(c => Math.max(c, 32))
-        if (event.title?.includes('quality'))         setConfidence(c => Math.max(c, 55))
-        if (event.title?.includes('pipeline'))        setConfidence(c => Math.max(c, 82))
-        if (event.title?.includes('owner'))           setConfidence(c => Math.max(c, 88))
-        if (event.title?.includes('Generating'))      setConfidence(c => Math.max(c, 95))
+        if (event.title?.includes('Searching')) setConfidence(c => Math.max(c, 12))
+        if (event.title?.includes('Traversing')) setConfidence(c => Math.max(c, 32))
+        if (event.title?.includes('quality')) setConfidence(c => Math.max(c, 55))
+        if (event.title?.includes('pipeline')) setConfidence(c => Math.max(c, 82))
+        if (event.title?.includes('owner')) setConfidence(c => Math.max(c, 88))
+        if (event.title?.includes('Generating')) setConfidence(c => Math.max(c, 95))
         break
 
       case 'tool_result': {
@@ -426,7 +427,7 @@ export default function App() {
         hasErrorRef.current = true
         setError(event.message)
         setSteps(prev => [...prev, {
-          title:  `❌ ${event.message}`,
+          title: `❌ ${event.message}`,
           detail: '',
           status: 'error',
         }])
@@ -439,11 +440,11 @@ export default function App() {
         // Only save if we actually started (not aborted before first event)
         if (startedAtRef.current) {
           saveInvestigation({
-            query:       currentQueryRef.current,
-            report:      reportRef.current,
-            startedAt:   startedAtRef.current,
+            query: currentQueryRef.current,
+            report: reportRef.current,
+            startedAt: startedAtRef.current,
             completedAt: Date.now(),
-            hasError:    hasErrorRef.current,
+            hasError: hasErrorRef.current,
           })
         }
         break
@@ -470,10 +471,10 @@ export default function App() {
     setActiveTab('investigate') // switch to investigate tab when running
 
     // Reset timing refs
-    startedAtRef.current    = Date.now()
+    startedAtRef.current = Date.now()
     currentQueryRef.current = q
-    reportRef.current       = null
-    hasErrorRef.current     = false
+    reportRef.current = null
+    hasErrorRef.current = false
 
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
@@ -481,10 +482,10 @@ export default function App() {
 
     try {
       const response = await fetch(`${API_BASE}/investigate`, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ query: q }),
-        signal:  controller.signal,
+        body: JSON.stringify({ query: q }),
+        signal: controller.signal,
       })
 
       if (!response.ok) {
@@ -492,9 +493,9 @@ export default function App() {
         throw new Error(err.detail || `Server error ${response.status}`)
       }
 
-      const reader  = response.body.getReader()
+      const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let buffer    = ''
+      let buffer = ''
 
       while (true) {
         const { value, done } = await reader.read()
@@ -571,7 +572,9 @@ export default function App() {
       <header className="app-header">
         <div className="app-header__inner">
           <div className="app-logo">
-            <span className="app-logo__icon">🔍</span>
+            <span className="app-logo__icon">
+              <img src={datasheriff_logo} alt="DataSheriff Logo" />
+            </span>
             <div>
               <h1 className="app-logo__name">DataSheriff</h1>
               <p className="app-logo__tagline">AI Data Incident Investigator</p>

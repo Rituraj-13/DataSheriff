@@ -24,9 +24,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
-.report-card__icon { font-size: 1.4rem; }
+.report-card__icon {
+  font-size: 1.4rem;
+}
 
 .report-card__title {
   font-size: 1rem;
@@ -38,6 +41,7 @@
   font-size: 0.72rem;
   color: var(--text-muted);
   margin: 0;
+  word-break: break-word;
 }
 
 .report-card__header-right {
@@ -45,6 +49,7 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* Severity badge */
@@ -58,10 +63,30 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
-.severity--critical { background: rgba(248,113,113,0.18); color: #f87171; border: 1px solid rgba(248,113,113,0.35); }
-.severity--high     { background: rgba(251,191,36,0.18);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); }
-.severity--medium   { background: rgba(124,108,250,0.18); color: #a5b4fc; border: 1px solid rgba(124,108,250,0.35); }
-.severity--low      { background: rgba(52,211,153,0.15);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+
+.severity--critical {
+  background: rgba(248, 113, 113, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.severity--high {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.severity--medium {
+  background: rgba(124, 108, 250, 0.18);
+  color: #a5b4fc;
+  border: 1px solid rgba(124, 108, 250, 0.35);
+}
+
+.severity--low {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
 
 .report-card__copy-btn {
   background: var(--bg-card-hover);
@@ -76,6 +101,7 @@
   font-family: var(--font-sans);
   white-space: nowrap;
 }
+
 .report-card__copy-btn:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
@@ -120,7 +146,9 @@
 }
 
 @media (max-width: 600px) {
-  .report-card__fields { grid-template-columns: 1fr; }
+  .report-card__fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .report-field {
@@ -254,4 +282,36 @@
   font-size: 0.875rem;
   color: var(--text-primary);
   line-height: 1.55;
+}
+
+@media (max-width: 768px) {
+  .report-card__header {
+    padding: 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .report-card__header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .report-card__root-cause {
+    margin: 12px 14px;
+    padding: 12px;
+  }
+
+  .report-field {
+    padding: 10px 14px;
+  }
+
+  .report-card__section,
+  .report-card__action {
+    padding: 12px 14px;
+  }
+
+  .lineage-path-node {
+    word-break: break-word;
+  }
 }
