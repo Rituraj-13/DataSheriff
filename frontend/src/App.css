@@ -381,3 +381,60 @@
 .app-footer a:hover { text-decoration: underline; }
 
 .footer-sep { opacity: 0.35; }
+
+
+
+/* ── App.css additions — paste these at the BOTTOM of your existing App.css ── */
+
+/* Nav tabs in header */
+.app-nav {
+  display: flex;
+  gap: 2px;
+  background: var(--color-background-secondary);
+  padding: 3px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+}
+
+.app-nav__tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.app-nav__tab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+}
+
+.app-nav__tab--active {
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  border: 0.5px solid var(--color-border-tertiary);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+.app-nav__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: #534AB7;
+  color: #fff;
+  border-radius: 99px;
+}

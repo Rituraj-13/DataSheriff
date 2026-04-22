@@ -138,3 +138,70 @@
 }
 .timeline__thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
 .timeline__thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+
+/* ── Paste these at the BOTTOM of your existing InvestigationTimeline.css ── */
+
+/* Confidence bar */
+.confidence-bar {
+  margin: 0 0 1rem;
+  padding: .65rem .9rem;
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+}
+
+.confidence-bar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.confidence-bar__label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.confidence-bar__pct {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  transition: color .4s ease;
+}
+
+.confidence-bar__track {
+  position: relative;
+  height: 6px;
+  background: var(--color-background-primary);
+  border-radius: 3px;
+  overflow: visible;
+  border: 0.5px solid var(--color-border-tertiary);
+}
+
+.confidence-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  min-width: 4px;
+}
+
+/* Animated shimmer pulse at the leading edge while running */
+.confidence-bar__shimmer {
+  position: absolute;
+  top: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateX(-50%);
+  animation: confidence-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+  opacity: .7;
+}
+
+@keyframes confidence-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1);   opacity: .7; }
+  50%       { transform: translateX(-50%) scale(1.5); opacity: .3; }
+}
+

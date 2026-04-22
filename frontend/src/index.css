@@ -23,6 +23,16 @@
   --text-muted:     #5a5a78;
   --text-code:      #a5b4fc;
 
+  /* Component Aliases */
+  --color-background-primary: var(--bg-card);
+  --color-background-secondary: var(--bg-surface);
+  --color-border-secondary: var(--border-bright);
+  --color-border-tertiary: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+
   /* Fonts */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
