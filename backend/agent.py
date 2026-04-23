@@ -2,6 +2,8 @@
 DataSheriff Agent
 Orchestrates the Claude AI agent that uses MCP tools to investigate data incidents.
 Streams intermediate steps via an async generator.
+
+The Anthropic API key is passed in at call time — never read from environment.
 """
 
 import json
@@ -12,7 +14,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL = "claude-sonnet-4-6"
 
 # ─── System prompt ─────────────────────────────────────────────────────────────
@@ -57,7 +58,15 @@ Follow these steps in order. Use tools — never answer from memory.
    Call get_asset_owner(entity_fqn) on the root cause asset only.
    If the API returns no owner, report "No owner assigned".
 
-7. REPORT
+7. GOVERNANCE TAGGING
+   Call tag_asset_failing(entity_fqn, entity_type) on the root cause asset.
+   This auto-tags it as DataQuality.Failing in OpenMetadata for governance tracking.
+   - Use the root_cause_asset FQN and its entity type (usually "table").
+   - If it returns status "tagged": set governance_action to "Tagged as DataQuality.Failing in OpenMetadata"
+   - If it returns status "already_tagged": set governance_action to "DataQuality.Failing tag already present"
+   - If it returns an error: set governance_action to null and continue — do not abort.
+
+8. REPORT
    Output the JSON report below. Leave fields null if the data was not returned by tools.
 
 === OUTPUT FORMAT ===
@@ -74,6 +83,7 @@ Output ONLY this JSON object, no other text before or after it:
   "failing_tests": [{"test": "<name>", "table": "<fqn>", "status": "<exact status from API>"}],
   "recommended_action": "<concrete step based on findings, or null if insufficient data>",
   "severity": "<Critical|High|Medium|Low — based on number of failing tests and lineage depth>",
+  "governance_action": "<result of tag_asset_failing, or null if not attempted>",
   "investigation_complete": true
 }
 
@@ -92,41 +102,46 @@ def _sse(event_type: str, data: dict) -> str:
 
 # ─── Agent runner ──────────────────────────────────────────────────────────────
 
-async def run_investigation(query: str) -> AsyncGenerator[str, None]:
+async def run_investigation(query: str, api_key: str) -> AsyncGenerator[str, None]:
     """
     Run the DataSheriff investigation agent for the given user query.
+
+    Args:
+        query:   The user's plain-English incident description.
+        api_key: The user's Anthropic API key (passed from the browser header).
+
     Yields SSE-formatted strings for streaming to the frontend.
 
     Event types emitted:
-      - "step"   : {"step": int, "title": str, "detail": str}
-      - "tool_call": {"tool": str, "input": dict}
+      - "step"       : {"step": int, "title": str, "detail": str}
+      - "tool_call"  : {"tool": str, "input": dict}
       - "tool_result": {"tool": str, "result": str}
-      - "thinking": {"text": str}
-      - "report"  : {"report": dict}
-      - "error"   : {"message": str}
-      - "done"    : {}
+      - "thinking"   : {"text": str}
+      - "report"     : {"report": dict}
+      - "error"      : {"message": str}
+      - "done"       : {}
     """
-    client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    # Use the caller-supplied key — never falls back to env
+    client = anthropic.AsyncAnthropic(api_key=api_key)
 
-    # Import tools from MCP server module (run as in-process for simplicity)
     from mcp_server import (
         search_assets,
         get_lineage,
         get_quality_tests,
         get_pipeline_runs,
         get_asset_owner,
+        tag_asset_failing,
     )
 
-    # Tool registry
     tool_registry = {
-        "search_assets": search_assets,
-        "get_lineage": get_lineage,
+        "search_assets":    search_assets,
+        "get_lineage":      get_lineage,
         "get_quality_tests": get_quality_tests,
         "get_pipeline_runs": get_pipeline_runs,
-        "get_asset_owner": get_asset_owner,
+        "get_asset_owner":  get_asset_owner,
+        "tag_asset_failing": tag_asset_failing,
     }
 
-    # Claude tool definitions (matching mcp_server signatures)
     tools = [
         {
             "name": "search_assets",
@@ -192,23 +207,46 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
                 "required": ["entity_fqn"],
             },
         },
+        {
+            "name": "tag_asset_failing",
+            "description": (
+                "Auto-tag a data asset with 'DataQuality.Failing' in OpenMetadata. "
+                "Call this on the root cause asset after ownership is confirmed. "
+                "Creates a governance record visible in the OpenMetadata UI."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "entity_fqn": {
+                        "type": "string",
+                        "description": "Fully qualified name of the root-cause asset",
+                    },
+                    "entity_type": {
+                        "type": "string",
+                        "enum": ["table", "dashboard", "pipeline", "topic"],
+                        "description": "Type of the entity (usually 'table')",
+                    },
+                },
+                "required": ["entity_fqn"],
+            },
+        },
     ]
 
     messages: list[dict] = [{"role": "user", "content": query}]
     step = 0
     step_titles = {
-        "search_assets": "🔍 Searching for affected asset",
-        "get_lineage": "🕸️ Traversing lineage graph",
+        "search_assets":    "🔍 Searching for affected asset",
+        "get_lineage":      "🕸️ Traversing lineage graph",
         "get_quality_tests": "🧪 Checking data quality tests",
         "get_pipeline_runs": "⚙️ Checking pipeline run history",
-        "get_asset_owner": "👤 Looking up asset owner",
+        "get_asset_owner":  "👤 Looking up asset owner",
+        "tag_asset_failing": "🏷️ Auto-tagging asset in OpenMetadata",
     }
 
     yield _sse("step", {"step": 0, "title": "🚨 Investigation started", "detail": f'Query: "{query}"'})
 
     try:
         while True:
-            # Call Claude
             response = await client.messages.create(
                 model=MODEL,
                 max_tokens=4096,
@@ -217,10 +255,8 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
                 messages=messages,
             )
 
-            # Add assistant response to message history
             messages.append({"role": "assistant", "content": response.content})
 
-            # Process response blocks
             tool_calls_made = []
             final_text = None
 
@@ -230,23 +266,21 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
                 elif block.type == "tool_use":
                     tool_calls_made.append(block)
 
-            # Execute tool calls
             if tool_calls_made:
                 tool_results = []
                 for tool_call in tool_calls_made:
                     step += 1
-                    tool_name = tool_call.name
+                    tool_name  = tool_call.name
                     tool_input = tool_call.input
 
-                    title = step_titles.get(tool_name, f"🔧 Calling {tool_name}")
+                    title  = step_titles.get(tool_name, f"🔧 Calling {tool_name}")
                     detail = json.dumps(tool_input, indent=2)
 
-                    yield _sse("step", {"step": step, "title": title, "detail": detail})
+                    yield _sse("step",      {"step": step, "title": title, "detail": detail})
                     yield _sse("tool_call", {"tool": tool_name, "input": tool_input})
 
-                    # Execute the actual tool
                     try:
-                        fn = tool_registry[tool_name]
+                        fn     = tool_registry[tool_name]
                         result = await fn(**tool_input)
                     except KeyError:
                         result = json.dumps({"error": f"Unknown tool: {tool_name}"})
@@ -255,40 +289,34 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
 
                     yield _sse("tool_result", {"tool": tool_name, "result": result})
 
-                    tool_results.append(
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": tool_call.id,
-                            "content": result,
-                        }
-                    )
+                    tool_results.append({
+                        "type":        "tool_result",
+                        "tool_use_id": tool_call.id,
+                        "content":     result,
+                    })
 
-                # Feed tool results back to Claude
                 messages.append({"role": "user", "content": tool_results})
 
-            # Check stop condition
             if response.stop_reason == "end_turn":
-                # Extract JSON report from final text
                 if final_text:
                     report = _extract_report(final_text)
                     if report:
                         step += 1
-                        yield _sse("step", {"step": step, "title": "📋 Generating incident report", "detail": ""})
+                        yield _sse("step",   {"step": step, "title": "📋 Generating incident report", "detail": ""})
                         yield _sse("report", {"report": report})
                     else:
                         yield _sse("thinking", {"text": final_text})
                 break
 
-            # Safety: break if no tool calls and not end_turn
             if not tool_calls_made and response.stop_reason != "tool_use":
                 if final_text:
                     yield _sse("thinking", {"text": final_text})
                 break
 
     except anthropic.AuthenticationError:
-        yield _sse("error", {"message": "Invalid Anthropic API key. Check your .env file."})
+        yield _sse("error", {"message": "Invalid Anthropic API key. Check the Settings tab."})
     except anthropic.RateLimitError:
-        yield _sse("error", {"message": "Anthropic rate limit hit. Please wait a moment and retry."})
+        yield _sse("error", {"message": "Anthropic rate limit hit. Wait a moment and retry."})
     except Exception as e:
         yield _sse("error", {"message": f"Investigation failed: {str(e)}"})
 
@@ -298,17 +326,13 @@ async def run_investigation(query: str) -> AsyncGenerator[str, None]:
 def _extract_report(text: str) -> dict | None:
     """Extract the JSON report from Claude's response text."""
     try:
-        # Look for JSON code block
         start = text.find("```json")
         if start != -1:
             end = text.find("```", start + 7)
             if end != -1:
-                json_str = text[start + 7:end].strip()
-                return json.loads(json_str)
-
-        # Try raw JSON
+                return json.loads(text[start + 7:end].strip())
         start = text.find("{")
-        end = text.rfind("}")
+        end   = text.rfind("}")
         if start != -1 and end != -1:
             return json.loads(text[start:end + 1])
     except (json.JSONDecodeError, ValueError):

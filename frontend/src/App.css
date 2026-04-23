@@ -638,3 +638,21 @@
     padding: 13px 12px;
   }
 }
+
+/* Warning count badge on Settings tab when key is missing */
+.app-nav__count--warn {
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  animation: pulse-dot 1.5s ease infinite;
+}
+
+/* Disabled sample query chip when no API key */
+.sample-query-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sample-query-chip:disabled:hover {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background: rgba(17, 28, 52, 0.66);
+}

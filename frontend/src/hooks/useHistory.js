@@ -54,6 +54,7 @@ export function useHistory() {
             owner: report?.owner ?? null,
             failingTestCount: report?.failing_tests?.length ?? 0,
             complete: report?.investigation_complete ?? false,
+            governanceAction: report?.governance_action ?? null,
             hasError,
         }
 

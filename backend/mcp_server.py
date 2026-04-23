@@ -311,3 +311,96 @@ async def get_asset_owner(entity_fqn: str, entity_type: str = "table") -> str:
 
 if __name__ == "__main__":
     mcp.run()
+
+
+# ─── Tool 6: tag_asset_failing ─────────────────────────────────────────────────
+
+@mcp.tool()
+async def tag_asset_failing(entity_fqn: str, entity_type: str = "table") -> str:
+    """
+    Auto-tag a data asset with 'DataQuality.Failing' in OpenMetadata.
+    This creates a governance record that the asset has an active quality failure.
+
+    Args:
+        entity_fqn: Fully qualified name of the root-cause asset.
+        entity_type: One of 'table', 'dashboard', 'pipeline'.
+
+    Returns:
+        JSON with tag status and a direct OpenMetadata URL to verify the tag.
+    """
+    try:
+        entity_type_plural = {
+            "table": "tables",
+            "dashboard": "dashboards",
+            "pipeline": "pipelines",
+            "topic": "topics",
+        }.get(entity_type, "tables")
+
+        # Step 1: GET current entity to retrieve id + existing tags
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            get_resp = await client.get(
+                f"{OPENMETADATA_HOST}/api/v1/{entity_type_plural}/name/{entity_fqn}",
+                headers=_headers(),
+                params={"fields": "tags"},
+            )
+            get_resp.raise_for_status()
+            entity = get_resp.json()
+
+        entity_id = entity.get("id")
+        if not entity_id:
+            return json.dumps({"error": "Could not resolve entity id", "entity_fqn": entity_fqn})
+
+        existing_tags = entity.get("tags", [])
+
+        # Step 2: Check if already tagged — idempotent
+        already_tagged = any(
+            t.get("tagFQN", "").lower() == "dataquality.failing"
+            for t in existing_tags
+        )
+        if already_tagged:
+            return json.dumps({
+                "status": "already_tagged",
+                "entity_fqn": entity_fqn,
+                "tag": "DataQuality.Failing",
+                "openmetadata_url": f"{OPENMETADATA_HOST}/{entity_type_plural}/name/{entity_fqn}",
+            })
+
+        # Step 3: PATCH with json-patch+json to add the tag
+        new_tag = {
+            "tagFQN": "DataQuality.Failing",
+            "source": "Classification",
+            "labelType": "Automated",
+            "state": "Confirmed",
+        }
+        patch_headers = {
+            "Authorization": f"Bearer {OPENMETADATA_TOKEN}",
+            "Content-Type": "application/json-patch+json",
+        }
+        patch_body = [{"op": "add", "path": "/tags/-", "value": new_tag}]
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            patch_resp = await client.patch(
+                f"{OPENMETADATA_HOST}/api/v1/{entity_type_plural}/{entity_id}",
+                headers=patch_headers,
+                json=patch_body,
+            )
+            patch_resp.raise_for_status()
+
+        return json.dumps({
+            "status": "tagged",
+            "entity_fqn": entity_fqn,
+            "tag": "DataQuality.Failing",
+            "entity_id": entity_id,
+            "openmetadata_url": f"{OPENMETADATA_HOST}/{entity_type_plural}/name/{entity_fqn}",
+            "message": "Asset tagged as DataQuality.Failing. Visible in OpenMetadata under the asset's Tags tab.",
+        })
+
+    except httpx.HTTPStatusError as e:
+        # DataQuality.Failing tag may not exist in this OM instance — report gracefully
+        error_body = e.response.text[:300]
+        return json.dumps({
+            "error": f"HTTP {e.response.status_code}: {error_body}",
+            "hint": "Ensure the 'DataQuality.Failing' tag exists in OpenMetadata Classification settings.",
+        })
+    except Exception as e:
+        return json.dumps({"error": str(e)})
