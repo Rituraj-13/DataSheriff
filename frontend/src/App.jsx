@@ -15,7 +15,7 @@ const SAMPLE_QUERIES = [
   'The fact_orders table has missing data since this morning',
 ]
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_BASE = 'https://backend.riturajdey.dev'
 
 export default function App() {
   // ── Navigation ───────────────────────────────────────────────────────────────
