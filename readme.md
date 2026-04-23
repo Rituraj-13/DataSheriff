@@ -65,9 +65,38 @@ OpenMetadata REST APIs (port 8585)
 - [Node.js 18+](https://nodejs.org/)
 - An [Anthropic API key](https://console.anthropic.com/) — add ~$5 credits (covers hundreds of investigations)
 
+> **⏱️ Total Setup Time:** 15-20 minutes (most of it is waiting for containers to start)
+
 ---
 
-## Quick Start (One Command)
+## Setup Summary
+
+Here's the complete setup flow at a glance:
+
+1. **Start Docker containers** → OpenMetadata + Airflow (3-5 min wait)
+2. **Load sample data** → Manually trigger 4 Airflow DAGs (5-10 min)
+3. **Get auth token** → Fetch OpenMetadata JWT token (30 sec)
+4. **Configure backend** → Create `.env` file with token (1 min)
+5. **Run setup script** → Seed demo lineage (1 min)
+6. **Start servers** → Backend + Frontend (2 min)
+7. **Add API key** → Enter your Anthropic key in UI Settings (30 sec)
+
+**Choose your path:**
+- **🚀 Quick Start** (recommended) — Semi-automated script that pauses for manual steps
+- **📋 Manual Setup** — Step-by-step instructions for full control
+
+<!-- ### Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| "Airflow not responding" | Wait 5-10 minutes — Airflow is slow to start, especially on WSL/first run |
+| "Could not fetch JWT token" | OpenMetadata auth takes 1-2 min after containers start — wait and retry |
+| "Port already in use" | Kill conflicting processes: `lsof -ti:8585,8080,8000,5173 \| xargs kill -9` |
+| "Docker containers exit immediately" | Check Docker Desktop has 6+ GB RAM allocated in settings | -->
+
+---
+
+## Quick Start (Recommended)
 
 The fastest way to get running:
 
@@ -78,15 +107,19 @@ chmod +x seed_and_run.sh
 ./seed_and_run.sh
 ```
 
-This single script:
-1. Checks Docker is running
-2. Starts OpenMetadata containers
-3. Waits for OpenMetadata to be ready
-4. Triggers all 4 Airflow sample data DAGs automatically
-5. Fetches your OpenMetadata token and writes it to `backend/.env`
-6. Sets up the Python venv and installs dependencies
-7. Runs `setup_demo.py` to wire up the demo lineage
-8. Starts the FastAPI backend
+This script will:
+1. Check Docker is running
+2. Start OpenMetadata containers
+3. Wait for OpenMetadata to be ready (2-5 minutes)
+4. **Pause and show you manual steps** for:
+   - Loading sample data via Airflow
+   - Getting your OpenMetadata JWT token
+   - Configuring backend/.env
+5. Set up the Python venv and install dependencies
+6. Run `setup_demo.py` to wire up the demo lineage
+7. Start the FastAPI backend
+
+**During the pause**, the script will display clear instructions for completing the manual steps. Once done, press Enter to continue.
 
 Then in a new terminal:
 ```bash
@@ -98,6 +131,10 @@ Open [http://localhost:5173](http://localhost:5173), go to **⚙️ Settings**, 
 ---
 
 ## Manual Setup (Step by Step)
+
+If you prefer to run each step manually or if the quick start script encounters issues, follow these detailed instructions:
+
+> **💡 Why some steps are manual:** Airflow and OpenMetadata authentication timing varies significantly across different machines and environments. The manual approach ensures you can verify each component is ready before proceeding, resulting in a more reliable setup experience.
 
 ### Step 1 — Clone the repository
 
@@ -128,28 +165,57 @@ curl http://localhost:8585/api/v1/system/version
 
 ### Step 3 — Load sample data via Airflow
 
-1. Open [http://localhost:8080](http://localhost:8080) — log in as `admin` / `admin`
-2. Go to **DAGs** and trigger each in this order by clicking ▷:
+**⏱️ Time required: 5-10 minutes** (Airflow needs time to start and process DAGs)
 
-   | DAG | What it does |
-   |-----|-------------|
-   | `sample_data` | Loads tables: fact_orders, dim_address, raw_order, dim_customer etc. |
-   | `sample_lineage` | Creates lineage connections between tables |
-   | `sample_usage` | Loads usage statistics |
-   | `airflow_metadata_extraction` | Syncs Airflow pipeline metadata into OpenMetadata |
+1. **Wait for Airflow to be ready** — Airflow starts alongside OpenMetadata but may take an additional 2-5 minutes to become accessible
+   
+2. Open [http://localhost:8080](http://localhost:8080) in your browser
+   
+3. Log in with:
+   - **Username:** `admin`
+   - **Password:** `admin`
 
-3. Wait for each DAG to show a **green ✅** before triggering the next
+4. Navigate to the **DAGs** page (should be the default view)
 
-### Step 4 — Get your OpenMetadata token
+5. **Trigger each DAG in this exact order** by clicking the ▷ (play) button on the right:
+
+   | Order | DAG Name | What it does | Wait time |
+   |-------|----------|--------------|-----------|
+   | 1st | `sample_data` | Loads tables: fact_orders, dim_address, raw_order, dim_customer etc. | ~2-3 min |
+   | 2nd | `sample_lineage` | Creates lineage connections between tables | ~1-2 min |
+   | 3rd | `sample_usage` | Loads usage statistics | ~1 min |
+   | 4th | `airflow_metadata_extraction` | Syncs Airflow pipeline metadata into OpenMetadata | ~1-2 min |
+
+6. **Important:** Wait for each DAG to show a **green ✅** (success) before triggering the next one
+   - Click on the DAG name to see its progress
+   - If a DAG shows red ❌ (failed), click on it to view logs, then re-trigger it
+
+> **Why manual?** Airflow startup time varies significantly across different machines (2-10 minutes), making automated triggering unreliable. Manual triggering ensures you can verify each step completes successfully.
+
+### Step 4 — Get your OpenMetadata JWT token
+
+<!-- **Option A: Using curl (Recommended)**
+
+Run this command in your terminal:
 
 ```bash
 curl -s -X POST "http://localhost:8585/api/v1/users/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@open-metadata.org","password":"admin"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])"
-```
+``` -->
 
-> **Alternative:** OpenMetadata UI → Settings → Bots → ingestion-bot → copy the token.
+This will print a long token string starting with `eyJ...`. Copy it — you'll need it in the next step.
+
+**Using OpenMetadata UI**
+
+1. Open [http://localhost:8585](http://localhost:8585)
+2. Log in as `admin@open-metadata.org` / `admin`
+3. Go to **Settings** (gear icon) → **Bots**
+4. Click on `ingestion-bot`
+5. Copy the **Token** displayed
+
+> **Token expires?** If you get 401 errors later, the token may have expired. Just run the curl command again to get a fresh one and update `backend/.env`.
 
 ### Step 5 — Configure the backend
 
@@ -245,17 +311,34 @@ You're ready to investigate.
 
 ---
 
+## Verification Checklist
+
+Before running your first investigation, verify all components are working:
+
+| Component | Check | Expected Result |
+|-----------|-------|-----------------|
+| **OpenMetadata** | `curl http://localhost:8585/api/v1/system/version` | Returns version 1.12.5 |
+| **Airflow** | Open http://localhost:8080 | Shows Airflow UI with 4 DAGs completed (green ✅) |
+| **Backend** | `curl http://localhost:8000/health` | Returns `{"status":"ok","service":"DataSheriff"}` |
+| **Frontend** | Open http://localhost:5173 | Shows DataSheriff UI |
+| **Sample Data** | In OpenMetadata UI, search for `fact_orders` | Should show table with lineage |
+| **Quality Tests** | In OpenMetadata, view `dim_address` table | Should show 3 failing tests |
+
+If any check fails, refer to the [Troubleshooting](#troubleshooting) section below.
+
+---
+
 ## Using DataSheriff
 
 ### Demo queries
 
-| Query | Works without setup_demo.py? | What the agent finds |
-|-------|------------------------------|---------------------|
-| `dim_address table is failing data quality checks` | ✅ Yes | 3 real failing tests directly on dim_address |
-| `raw_customer table has incorrect data` | ✅ Yes | Traces lineage → finds dim_address failures |
-| `The orders dashboard is showing wrong data` | After setup_demo.py | Full 10-node lineage chain + dim_address root cause |
-| `The fact_orders table has missing data` | After setup_demo.py | Traces fact_orders → dim_address |
-| `The payments dashboard is showing wrong numbers` | ✅ Yes | Honest null report — asset not found |
+| Query | What the agent finds |
+|-------|---------------------|
+| `dim_address table is failing data quality checks` | 3 real failing tests directly on dim_address |
+| `raw_customer table has incorrect data` | Traces lineage → finds dim_address failures |
+| `The orders dashboard is showing wrong data` | Full 10-node lineage chain + dim_address root cause |
+| `The fact_orders table has missing data` | Traces fact_orders → dim_address |
+| `The payments dashboard is showing wrong numbers` | Honest null report — asset not found |
 
 ### What the agent does
 
@@ -345,6 +428,20 @@ The server only needs `OPENMETADATA_TOKEN` in its `.env`. Each user pays for the
 ---
 
 ## Troubleshooting
+
+**Airflow not accessible at http://localhost:8080**
+
+Airflow can take 5-10 minutes to start on first run, especially on slower machines or WSL. Check container status:
+```bash
+docker ps --filter name=openmetadata_ingestion
+```
+
+Watch the logs:
+```bash
+docker compose -f openmetadata-docker/docker-compose-postgres.yml logs -f openmetadata_ingestion
+```
+
+Wait until you see "Airflow webserver is ready" or similar. Once ready, you can access it at http://localhost:8080.
 
 **Investigation fails with "Invalid Anthropic API key"**
 
