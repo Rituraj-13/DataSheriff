@@ -6,6 +6,16 @@ Built for the **WeMakeDevs × OpenMetadata Hackathon 2026**
 
 ---
 
+## 🚀 Live Demo
+
+**Try it now (no setup required):** [https://datasheriff.riturajdey01.workers.dev/](https://datasheriff.riturajdey01.workers.dev/)
+
+> You only need your own **Anthropic API key** — go to ⚙️ Settings, paste your `sk-ant-...` key, and you're ready to investigate.
+
+**📽️ Demo Video:** [https://youtu.be/FJjLcWuaQ0M](https://youtu.be/FJjLcWuaQ0M)
+
+---
+
 ## The Problem
 
 When a data pipeline breaks and a dashboard shows wrong numbers, engineers spend **3–6 hours** manually hunting through Airflow, SQL queries, and Slack threads to find the root cause.
@@ -85,15 +95,6 @@ Here's the complete setup flow at a glance:
 - **🚀 Quick Start** (recommended) — Semi-automated script that pauses for manual steps
 - **📋 Manual Setup** — Step-by-step instructions for full control
 
-<!-- ### Common Issues & Solutions
-
-| Issue | Solution |
-|-------|----------|
-| "Airflow not responding" | Wait 5-10 minutes — Airflow is slow to start, especially on WSL/first run |
-| "Could not fetch JWT token" | OpenMetadata auth takes 1-2 min after containers start — wait and retry |
-| "Port already in use" | Kill conflicting processes: `lsof -ti:8585,8080,8000,5173 \| xargs kill -9` |
-| "Docker containers exit immediately" | Check Docker Desktop has 6+ GB RAM allocated in settings | -->
-
 ---
 
 ## Quick Start (Recommended)
@@ -101,7 +102,7 @@ Here's the complete setup flow at a glance:
 The fastest way to get running:
 
 ```bash
-git clone https://github.com/your-username/DataSheriff.git
+git clone https://github.com/Rituraj-13/DataSheriff.git
 cd DataSheriff
 chmod +x seed_and_run.sh
 ./seed_and_run.sh
@@ -139,7 +140,7 @@ If you prefer to run each step manually or if the quick start script encounters 
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/your-username/DataSheriff.git
+git clone https://github.com/Rituraj-13/DataSheriff.git
 cd DataSheriff
 ```
 
@@ -180,7 +181,7 @@ curl http://localhost:8585/api/v1/system/version
 5. **Trigger each DAG in this exact order** by clicking the ▷ (play) button on the right:
 
    | Order | DAG Name | What it does | Wait time |
-   |-------|----------|--------------|-----------|
+   |-------|----------|--------------|-----------| 
    | 1st | `sample_data` | Loads tables: fact_orders, dim_address, raw_order, dim_customer etc. | ~2-3 min |
    | 2nd | `sample_lineage` | Creates lineage connections between tables | ~1-2 min |
    | 3rd | `sample_usage` | Loads usage statistics | ~1 min |
@@ -194,19 +195,6 @@ curl http://localhost:8585/api/v1/system/version
 
 ### Step 4 — Get your OpenMetadata JWT token
 
-<!-- **Option A: Using curl (Recommended)**
-
-Run this command in your terminal:
-
-```bash
-curl -s -X POST "http://localhost:8585/api/v1/users/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@open-metadata.org","password":"admin"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])"
-``` -->
-
-This will print a long token string starting with `eyJ...`. Copy it — you'll need it in the next step.
-
 **Using OpenMetadata UI**
 
 1. Open [http://localhost:8585](http://localhost:8585)
@@ -215,7 +203,7 @@ This will print a long token string starting with `eyJ...`. Copy it — you'll n
 4. Click on `ingestion-bot`
 5. Copy the **Token** displayed
 
-> **Token expires?** If you get 401 errors later, the token may have expired. Just run the curl command again to get a fresh one and update `backend/.env`.
+> **Token expires?** If you get 401 errors later, the token may have expired. Repeat this step to get a fresh token and update `backend/.env`.
 
 ### Step 5 — Configure the backend
 
@@ -293,7 +281,21 @@ curl http://localhost:8000/health
 # {"status":"ok","service":"DataSheriff"}
 ```
 
-### Step 8 — Start the frontend
+### Step 8 — Point the frontend at your local backend
+
+Before starting the frontend, open `frontend/src/App.jsx` and update the `API_BASE` constant at line 18 to point to your local backend:
+
+```js
+// Change this:
+const API_BASE = 'https://backend.riturajdey.dev'
+
+// To this:
+const API_BASE = 'http://localhost:8000'
+```
+
+> **Why?** The deployed version of the frontend is pre-configured to hit the live production backend. For local development, you need to point it at your own backend running on port 8000.
+
+### Step 9 — Start the frontend
 
 ```bash
 cd frontend
@@ -303,7 +305,7 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173)
 
-### Step 9 — Add your Anthropic API key
+### Step 10 — Add your Anthropic API key
 
 Click **⚙️ Settings** in the top navigation. Enter your `sk-ant-...` key and click **Save Key**. Your key is stored in your browser's localStorage — it never leaves your device except as a request header.
 
@@ -316,7 +318,7 @@ You're ready to investigate.
 Before running your first investigation, verify all components are working:
 
 | Component | Check | Expected Result |
-|-----------|-------|-----------------|
+|-----------|-------|-----------------| 
 | **OpenMetadata** | `curl http://localhost:8585/api/v1/system/version` | Returns version 1.12.5 |
 | **Airflow** | Open http://localhost:8080 | Shows Airflow UI with 4 DAGs completed (green ✅) |
 | **Backend** | `curl http://localhost:8000/health` | Returns `{"status":"ok","service":"DataSheriff"}` |
@@ -397,7 +399,7 @@ DataSheriff/
 DataSheriff uses 6 custom MCP tools wrapping OpenMetadata's REST APIs:
 
 | Tool | OpenMetadata API | Purpose |
-|------|-----------------|---------|
+|------|-----------------|---------| 
 | `search_assets(query)` | `GET /search/query` | Find assets by name |
 | `get_lineage(entity_id, entity_type)` | `GET /lineage/{type}/{id}` | Trace upstream graph |
 | `get_quality_tests(table_fqn)` | `GET /dataQuality/testCases` | Check test results |
@@ -504,6 +506,7 @@ The tag classification must exist in OpenMetadata first. Go to Govern → Classi
 | Pipeline Orchestration | Apache Airflow 2.x |
 | Database | PostgreSQL |
 | Search | Elasticsearch |
+| Deployment | Cloudflare Workers (frontend), DigitalOcean (backend) |
 
 ---
 
