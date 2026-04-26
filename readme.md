@@ -1,105 +1,162 @@
-# 🔍 DataSheriff — AI Data Incident Investigator
+# DataSheriff — AI Data Incident Investigator
 
-> Describe a broken dashboard in plain English. DataSheriff traces your full data lineage, checks quality tests at every upstream node, identifies the root cause, and auto-tags the failing asset — all in under 30 seconds.
+> Describe a broken dashboard in plain English. DataSheriff traces your full data lineage, checks quality tests at every upstream node, identifies the root cause, and auto-tags the failing asset in OpenMetadata — **all in under 30 seconds**.
 
 Built for the **WeMakeDevs × OpenMetadata Hackathon 2026**
 
 ---
 
-## 🚀 Live Demo
+## 🚀 Try It Live — No Setup Required
 
-**Try it now (no setup required):** [https://datasheriff.riturajdey01.workers.dev/](https://datasheriff.riturajdey01.workers.dev/)
+| | |
+|---|---|
+| **Live App** | [https://datasheriff.riturajdey01.workers.dev/](https://datasheriff.riturajdey01.workers.dev/) |
+| **Demo Video** | [https://youtu.be/FJjLcWuaQ0M](https://youtu.be/FJjLcWuaQ0M) |
+| **GitHub** | [https://github.com/Rituraj-13/DataSheriff](https://github.com/Rituraj-13/DataSheriff) |
 
-> You only need your own **Anthropic API key** — go to ⚙️ Settings, paste your `sk-ant-...` key, and you're ready to investigate.
-
-**📽️ Demo Video:** [https://youtu.be/FJjLcWuaQ0M](https://youtu.be/FJjLcWuaQ0M)
-
----
-
-## The Problem
-
-When a data pipeline breaks and a dashboard shows wrong numbers, engineers spend **3–6 hours** manually hunting through Airflow, SQL queries, and Slack threads to find the root cause.
-
-DataSheriff reduces that to **30 seconds** — powered by Claude AI + OpenMetadata's lineage, quality, and governance APIs.
+> Bring your own Anthropic API key — go to **⚙️ Settings**, paste your `sk-ant-...` key, type any query, and watch the investigation unfold in real time.
 
 ---
 
-## Demo
+## 🎯 The Problem — $2.5B Lost to Broken Data Pipelines Every Year
 
-**Input:**
-> "The orders dashboard is showing wrong data"
+Every data team has the same nightmare: a dashboard goes red at 2 AM, and no one knows why.
 
-**Output:** A full incident report with root cause, evidence quoted directly from real quality tests, lineage path, asset owner, recommended action — and the root cause asset automatically tagged as `DataQuality.Failing` in OpenMetadata.
+The typical debugging workflow looks like this:
+
+1. **Slack fire** — stakeholders ping the data team
+2. **Manual triage** — engineers check Airflow DAGs, query upstream tables, search OpenMetadata for owners
+3. **3–6 hours later** — root cause found, fix deployed, damage done
+
+**DataSheriff compresses that entire workflow to 30 seconds.**
+
+It does exactly what a senior data engineer would do — but automatically, in parallel, with every finding traceable back to a real API call.
 
 ---
 
-## Architecture
+## ✨ What Makes It Stand Out
+
+| Capability | How DataSheriff does it |
+|---|---|
+| **Natural Language Input** | Plain English query, no JSON, no SQL |
+| **Live Streaming Investigation** | Every tool call streamed via SSE — watch the agent think |
+| **Real Lineage Traversal** | Walks the actual OpenMetadata lineage graph, not hardcoded paths |
+| **Evidence-Backed Reports** | Every claim in the report is quoted directly from API output |
+| **Auto-Governance Tagging** | Writes `DataQuality.Failing` back to OpenMetadata on root cause |
+| **Bring Your Own Key** | Server never touches API keys — zero credit risk for operators |
+| **MTTR Tracking** | History dashboard measures your team's mean time to resolution |
+| **Honesty Rules** | Agent refuses to invent data — returns null if nothing is found |
+
+---
+
+## 🧠 How It Works
+
+DataSheriff uses a Claude Sonnet 4.6 AI agent equipped with 6 custom MCP tools, each wrapping a real OpenMetadata REST API. Here's a real investigation trace:
 
 ```
-User (plain English query + their Anthropic API key)
+User: "The orders dashboard is showing wrong data"
         ↓
-React Frontend (port 5173)
-        ↓ POST /investigate  +  X-Anthropic-Key header
-FastAPI Backend (port 8000)
-        ↓
-Claude Sonnet 4.6 Agent  ←  user's own API key (never stored on server)
-        ↓ 6 MCP Tools
-OpenMetadata REST APIs (port 8585)
-  ├── search_assets()       → find the broken asset
-  ├── get_lineage()         → trace upstream dependency graph
-  ├── get_quality_tests()   → check test results at every node
-  ├── get_pipeline_runs()   → check pipeline execution history
-  ├── get_asset_owner()     → find who to contact
-  └── tag_asset_failing()   → auto-tag root cause as DataQuality.Failing
+[Tool 1] search_assets("orders dashboard")
+         → Found: sample_looker.orders (Dashboard)
+
+[Tool 2] get_lineage("sample_looker.orders", "dashboard", depth=3)
+         → 10-node upstream graph: fact_orders ← dim_address, dim_customer, raw_order, ...
+
+[Tool 3] get_quality_tests("sample_data.ecommerce_db.shopify.fact_orders")
+         → 9 tests: 6 passed, 3 FAILED
+
+[Tool 4] get_quality_tests("sample_data.ecommerce_db.shopify.dim_address")
+         → FAILED: diff_columns (4 different columns vs production)
+         → FAILED: diff_with_production (3 differing rows found)
+         → FAILED: column_values_to_be_between (min=1001, expected ≥1000)
+
+[Tool 5] get_asset_owner("sample_data.ecommerce_db.shopify.dim_address")
+         → Owner: data-platform-team
+
+[Tool 6] tag_asset_failing("sample_data.ecommerce_db.shopify.dim_address")
+         → ✅ Tagged DataQuality.Failing in OpenMetadata
+
+Output: Incident report — root cause: dim_address, 3 failing tests, owner notified
+```
+
+**Total time: 12 seconds.**
+
+---
+
+## 🗺️ Architecture
+
+```
+User (plain English query + Anthropic API key)
+        │
+        ▼
+React Frontend (Cloudflare Workers)
+        │  POST /investigate
+        │  Header: X-Anthropic-Key: sk-ant-xxxx
+        ▼
+FastAPI Backend (DigitalOcean, port 8000)
+        │
+        ▼
+Claude Sonnet 4.6 Agent
+        │  @mcp.tool() functions called directly (async Python)
+        ▼
+OpenMetadata REST APIs (v1.12.5)
+   ├── GET  /search/query                     ← find assets by name
+   ├── GET  /lineage/{type}/{id}              ← traverse lineage (upstreamDepth=3)
+   ├── GET  /dataQuality/testCases            ← check test results per table
+   ├── GET  /pipelines/name/{fqn}            ← resolve pipeline ID
+   │    └── GET /pipelines/{id}/status       ← fetch run history
+   ├── GET  /{entity_type}s/name/{fqn}       ← find asset owner (tables/dashboards/pipelines)
+   │    GET  /{entity_type}s/name/{fqn}?fields=tags
+   └── PATCH /{entity_type}s/{id}            ← write DataQuality.Failing tag
+        │
+        ▼
+Server-Sent Events stream → React UI updates in real time
 ```
 
 ---
 
-## Key Features
+## 🔗 OpenMetadata Integration — In Depth
 
-- **Live Investigation Timeline** — every tool call streamed in real time with a confidence score bar (0 → 100%)
-- **Interactive Lineage Graph** — React Flow visualization with failing nodes highlighted in red and directional arrows
-- **Incident Report** — structured JSON with root cause, evidence quoted directly from API output, severity, and recommended action
-- **Auto-Governance Tagging** — automatically tags the root cause asset as `DataQuality.Failing` in OpenMetadata
-- **MTTR History Dashboard** — tracks every past investigation with timing, shows average MTTR vs 4.2h industry average
-- **Severity Trend Chart** — visualizes incident severity distribution across investigations
-- **Bring Your Own Key** — users supply their own Anthropic API key via the Settings tab; it's stored in their browser's localStorage and never touched by the server
-- **Honesty Rules** — agent never invents lineage or test results; every claim in the report is traceable to a specific tool call
+DataSheriff is built on **6 OpenMetadata API surfaces** used in a coordinated investigation flow:
+
+| MCP Tool | OpenMetadata API | What it unlocks |
+|---|---|---|
+| `search_assets(query)` | `GET /api/v1/search/query` | Full-text asset search across all entity types |
+| `get_lineage(entity_id, type)` | `GET /api/v1/lineage/{entityType}/{id}?upstreamDepth=3` | Multi-hop upstream lineage graph traversal |
+| `get_quality_tests(table_fqn)` | `GET /api/v1/dataQuality/testCases` | Per-table test results with failure evidence |
+| `get_pipeline_runs(pipeline_fqn)` | `GET /api/v1/pipelines/name/{fqn}` → `GET /api/v1/pipelines/{id}/status` | 2-step: resolve ID then fetch Airflow run history |
+| `get_asset_owner(entity_fqn, entity_type)` | `GET /api/v1/{entity_type}s/name/{fqn}` | Ownership resolution for tables, dashboards, pipelines |
+| `tag_asset_failing(entity_fqn, entity_type)` | `GET` + `PATCH /api/v1/{entity_type}s/{id}` | Idempotent governance tagging — checks before writing |
+
+The agent dynamically determines which tools to call and in what order based on what it finds. It doesn't follow a script — it reasons from evidence.
 
 ---
 
-## Prerequisites
+## 🔑 Key Features
+
+- **Live Investigation Timeline** — every tool call streamed in real time with a confidence score bar climbing 0 → 100%
+- **Interactive Lineage Graph** — React Flow visualization; failing nodes highlighted in red with directional arrows
+- **Structured Incident Report** — root cause, severity badge, evidence quoted directly from API output, recommended action
+- **Auto-Governance Tagging** — writes `DataQuality.Failing` tag back to OpenMetadata at investigation close
+- **MTTR History Dashboard** — tracks past investigations, computes mean time to resolution vs 4.2h industry average
+- **Severity Trend Chart** — Recharts visualization of incident severity distribution over time
+- **Bring Your Own Key** — Anthropic key stored in browser localStorage only, sent as `X-Anthropic-Key` header, never persisted server-side
+- **Honesty Rules** — agent refuses to invent lineage or test results; every claim cites a specific tool call
+
+---
+
+## 📋 Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) — at least 6 GB RAM allocated
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Node.js 18+](https://nodejs.org/)
-- An [Anthropic API key](https://console.anthropic.com/) — add ~$5 credits (covers hundreds of investigations)
+- An [Anthropic API key](https://console.anthropic.com/) — ~$5 credits covers hundreds of investigations
 
-> **⏱️ Total Setup Time:** 15-20 minutes (most of it is waiting for containers to start)
-
----
-
-## Setup Summary
-
-Here's the complete setup flow at a glance:
-
-1. **Start Docker containers** → OpenMetadata + Airflow (3-5 min wait)
-2. **Load sample data** → Manually trigger 4 Airflow DAGs (5-10 min)
-3. **Get auth token** → Fetch OpenMetadata JWT token (30 sec)
-4. **Configure backend** → Create `.env` file with token (1 min)
-5. **Run setup script** → Seed demo lineage (1 min)
-6. **Start servers** → Backend + Frontend (2 min)
-7. **Add API key** → Enter your Anthropic key in UI Settings (30 sec)
-
-**Choose your path:**
-- **🚀 Quick Start** (recommended) — Semi-automated script that pauses for manual steps
-- **📋 Manual Setup** — Step-by-step instructions for full control
+> **⏱️ Total Setup Time:** ~20 minutes (mostly waiting for containers to start)
 
 ---
 
-## Quick Start (Recommended)
-
-The fastest way to get running:
+## ⚡ Quick Start (Recommended)
 
 ```bash
 git clone https://github.com/Rituraj-13/DataSheriff.git
@@ -108,34 +165,40 @@ chmod +x seed_and_run.sh
 ./seed_and_run.sh
 ```
 
-This script will:
-1. Check Docker is running
-2. Start OpenMetadata containers
-3. Wait for OpenMetadata to be ready (2-5 minutes)
-4. **Pause and show you manual steps** for:
-   - Loading sample data via Airflow
-   - Getting your OpenMetadata JWT token
-   - Configuring backend/.env
-5. Set up the Python venv and install dependencies
-6. Run `setup_demo.py` to wire up the demo lineage
+The script will:
+1. Verify Docker is running
+2. Start OpenMetadata + Airflow containers
+3. Wait for OpenMetadata to be ready (2–5 min)
+4. **Pause** and guide you through the manual Airflow + token steps
+5. Create the Python venv and install dependencies
+6. Run `setup_demo.py` to wire up demo lineage
 7. Start the FastAPI backend
 
-**During the pause**, the script will display clear instructions for completing the manual steps. Once done, press Enter to continue.
+Before starting the frontend, open `frontend/src/App.jsx` and update line 18 to point at your local backend:
 
-Then in a new terminal:
+```js
+// Change this (production URL):
+const API_BASE = 'https://backend.riturajdey.dev'
+
+// To this (your local backend):
+const API_BASE = 'http://localhost:8000'
+```
+
+Then in a second terminal:
 ```bash
 cd frontend && npm install && npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173), go to **⚙️ Settings**, add your Anthropic API key, and start investigating.
+Open [http://localhost:5173](http://localhost:5173) → **⚙️ Settings** → enter your Anthropic API key → investigate.
 
 ---
 
-## Manual Setup (Step by Step)
+<details>
+<summary><strong>📋 Manual Setup (Step by Step) — click to expand</strong></summary>
 
-If you prefer to run each step manually or if the quick start script encounters issues, follow these detailed instructions:
+<br>
 
-> **💡 Why some steps are manual:** Airflow and OpenMetadata authentication timing varies significantly across different machines and environments. The manual approach ensures you can verify each component is ready before proceeding, resulting in a more reliable setup experience.
+> **💡 Why some steps are manual:** Airflow startup time varies greatly across machines. Manual triggering lets you verify each component is ready before proceeding.
 
 ### Step 1 — Clone the repository
 
@@ -144,20 +207,23 @@ git clone https://github.com/Rituraj-13/DataSheriff.git
 cd DataSheriff
 ```
 
-### Step 2 — Start OpenMetadata
+### Step 2 — Start OpenMetadata + Airflow
 
 ```bash
 docker compose -f openmetadata-docker/docker-compose-postgres.yml up --detach
 ```
 
 This starts 5 containers:
-- `openmetadata_server` — main app on port 8585
-- `openmetadata_ingestion` — Airflow on port 8080
-- `openmetadata_postgresql` — metadata database
-- `openmetadata_elasticsearch` — search index
-- `execute_migrate_all` — runs DB migrations once then exits
 
-**Wait 3–5 minutes** for everything to start. Verify:
+| Container | Purpose | Port |
+|---|---|---|
+| `openmetadata_server` | Main OpenMetadata app | 8585 |
+| `openmetadata_ingestion` | Airflow for sample data | 8080 |
+| `openmetadata_postgresql` | Metadata database | — |
+| `openmetadata_elasticsearch` | Search index | — |
+| `execute_migrate_all` | DB migrations (exits after) | — |
+
+**Wait 3–5 minutes**, then verify:
 
 ```bash
 curl http://localhost:8585/api/v1/system/version
@@ -166,44 +232,27 @@ curl http://localhost:8585/api/v1/system/version
 
 ### Step 3 — Load sample data via Airflow
 
-**⏱️ Time required: 5-10 minutes** (Airflow needs time to start and process DAGs)
+1. Open [http://localhost:8080](http://localhost:8080)
+2. Log in: `admin` / `admin`
+3. Trigger these 4 DAGs **in order**, waiting for each green ✅ before the next:
 
-1. **Wait for Airflow to be ready** — Airflow starts alongside OpenMetadata but may take an additional 2-5 minutes to become accessible
-   
-2. Open [http://localhost:8080](http://localhost:8080) in your browser
-   
-3. Log in with:
-   - **Username:** `admin`
-   - **Password:** `admin`
+   | # | DAG Name | What it loads | Time |
+   |---|---|---|---|
+   | 1 | `sample_data` | Tables: fact_orders, dim_address, raw_order, dim_customer... | ~2–3 min |
+   | 2 | `sample_lineage` | Lineage connections between tables | ~1–2 min |
+   | 3 | `sample_usage` | Usage statistics | ~1 min |
+   | 4 | `airflow_metadata_extraction` | Syncs Airflow metadata into OpenMetadata | ~1–2 min |
 
-4. Navigate to the **DAGs** page (should be the default view)
-
-5. **Trigger each DAG in this exact order** by clicking the ▷ (play) button on the right:
-
-   | Order | DAG Name | What it does | Wait time |
-   |-------|----------|--------------|-----------| 
-   | 1st | `sample_data` | Loads tables: fact_orders, dim_address, raw_order, dim_customer etc. | ~2-3 min |
-   | 2nd | `sample_lineage` | Creates lineage connections between tables | ~1-2 min |
-   | 3rd | `sample_usage` | Loads usage statistics | ~1 min |
-   | 4th | `airflow_metadata_extraction` | Syncs Airflow pipeline metadata into OpenMetadata | ~1-2 min |
-
-6. **Important:** Wait for each DAG to show a **green ✅** (success) before triggering the next one
-   - Click on the DAG name to see its progress
-   - If a DAG shows red ❌ (failed), click on it to view logs, then re-trigger it
-
-> **Why manual?** Airflow startup time varies significantly across different machines (2-10 minutes), making automated triggering unreliable. Manual triggering ensures you can verify each step completes successfully.
+> If a DAG fails (red ❌), click it to see logs and re-trigger.
 
 ### Step 4 — Get your OpenMetadata JWT token
 
-**Using OpenMetadata UI**
-
 1. Open [http://localhost:8585](http://localhost:8585)
-2. Log in as `admin@open-metadata.org` / `admin`
-3. Go to **Settings** (gear icon) → **Bots**
-4. Click on `ingestion-bot`
-5. Copy the **Token** displayed
+2. Log in: `admin@open-metadata.org` / `admin`
+3. **Settings** (gear icon) → **Bots** → click `ingestion-bot`
+4. Copy the **Token** value
 
-> **Token expires?** If you get 401 errors later, the token may have expired. Repeat this step to get a fresh token and update `backend/.env`.
+> If you get 401 errors later, the token expired — repeat this step and update `backend/.env`.
 
 ### Step 5 — Configure the backend
 
@@ -217,30 +266,30 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Open `backend/.env` and set:
+Edit `backend/.env`:
 
 ```env
 OPENMETADATA_HOST=http://localhost:8585
 OPENMETADATA_TOKEN=paste-your-token-here
 ```
 
-> **Note:** `ANTHROPIC_API_KEY` is **not needed** in `.env`. Users supply their own key via the Settings tab in the UI — it's stored in their browser only and sent as a request header. Your server credentials are never at risk.
+> **Note:** `ANTHROPIC_API_KEY` is **not** set here. Users bring their own key via the UI — your server never sees it.
 
-> **Windows + Ollama users:** If you have `ANTHROPIC_BASE_URL` set as a system environment variable (common with Ollama), it will break the API connection. Fix it:
+> **Windows + Ollama users:** A conflicting `ANTHROPIC_BASE_URL` system variable will break the connection. Fix it:
 > ```powershell
 > Remove-Item Env:ANTHROPIC_BASE_URL -ErrorAction SilentlyContinue
 > ```
 
-### Step 6 — Run the demo setup script
+### Step 6 — Seed demo lineage
 
 ```bash
 cd backend
 python3 setup_demo.py
 ```
 
-This script dynamically finds your OpenMetadata assets by name and adds two missing lineage links:
-- `fact_orders` → `orders` dashboard
+This adds two missing lineage edges to make the full investigation chain work:
 - `dim_address` → `fact_orders`
+- `fact_orders` → `orders` dashboard
 
 Expected output:
 ```
@@ -283,17 +332,15 @@ curl http://localhost:8000/health
 
 ### Step 8 — Point the frontend at your local backend
 
-Before starting the frontend, open `frontend/src/App.jsx` and update the `API_BASE` constant at line 18 to point to your local backend:
+Open `frontend/src/App.jsx` and update line 18:
 
 ```js
-// Change this:
+// Change this (production URL):
 const API_BASE = 'https://backend.riturajdey.dev'
 
-// To this:
+// To this (your local backend):
 const API_BASE = 'http://localhost:8000'
 ```
-
-> **Why?** The deployed version of the frontend is pre-configured to hit the live production backend. For local development, you need to point it at your own backend running on port 8000.
 
 ### Step 9 — Start the frontend
 
@@ -307,83 +354,81 @@ Open [http://localhost:5173](http://localhost:5173)
 
 ### Step 10 — Add your Anthropic API key
 
-Click **⚙️ Settings** in the top navigation. Enter your `sk-ant-...` key and click **Save Key**. Your key is stored in your browser's localStorage — it never leaves your device except as a request header.
+Click **⚙️ Settings**, enter your `sk-ant-...` key, and click **Save Key**. It's stored in your browser's `localStorage` only — it never leaves your device except as a request header.
 
-You're ready to investigate.
+**You're ready to investigate.**
 
----
-
-## Verification Checklist
-
-Before running your first investigation, verify all components are working:
-
-| Component | Check | Expected Result |
-|-----------|-------|-----------------| 
-| **OpenMetadata** | `curl http://localhost:8585/api/v1/system/version` | Returns version 1.12.5 |
-| **Airflow** | Open http://localhost:8080 | Shows Airflow UI with 4 DAGs completed (green ✅) |
-| **Backend** | `curl http://localhost:8000/health` | Returns `{"status":"ok","service":"DataSheriff"}` |
-| **Frontend** | Open http://localhost:5173 | Shows DataSheriff UI |
-| **Sample Data** | In OpenMetadata UI, search for `fact_orders` | Should show table with lineage |
-| **Quality Tests** | In OpenMetadata, view `dim_address` table | Should show 3 failing tests |
-
-If any check fails, refer to the [Troubleshooting](#troubleshooting) section below.
+</details>
 
 ---
 
-## Using DataSheriff
+## ✅ Verification Checklist
 
-### Demo queries
+| Component | How to check | Expected result |
+|---|---|---|
+| **OpenMetadata** | `curl http://localhost:8585/api/v1/system/version` | `{"version":"1.12.5",...}` |
+| **Airflow** | Open http://localhost:8080 | 4 DAGs green ✅ |
+| **Backend** | `curl http://localhost:8000/health` | `{"status":"ok","service":"DataSheriff"}` |
+| **Frontend** | Open http://localhost:5173 | DataSheriff UI loads |
+| **Sample Data** | Search `fact_orders` in OpenMetadata | Table with lineage visible |
+| **Quality Tests** | View `dim_address` in OpenMetadata | 3 failing tests visible |
+
+---
+
+## 🎮 Using DataSheriff
+
+### Recommended demo queries
 
 | Query | What the agent finds |
-|-------|---------------------|
-| `dim_address table is failing data quality checks` | 3 real failing tests directly on dim_address |
-| `raw_customer table has incorrect data` | Traces lineage → finds dim_address failures |
-| `The orders dashboard is showing wrong data` | Full 10-node lineage chain + dim_address root cause |
-| `The fact_orders table has missing data` | Traces fact_orders → dim_address |
-| `The payments dashboard is showing wrong numbers` | Honest null report — asset not found |
+|---|---|
+| `The orders dashboard is showing wrong data` | Full 10-node lineage chain + dim_address root cause (3 failing tests) |
+| `dim_address table is failing data quality checks` | 3 failing tests directly on dim_address |
+| `raw_customer table has incorrect data` | Traces lineage upstream → finds dim_address failures |
+| `The fact_orders table has missing data` | Traverses fact_orders lineage → dim_address |
+| `The payments dashboard is showing wrong numbers` | Honest null report — asset not found in OpenMetadata |
 
-### What the agent does
+### The 8-step investigation workflow
 
-1. **Searches** OpenMetadata for the asset mentioned in the query
-2. **Traverses lineage** upstream — finds all tables feeding into the asset
-3. **Checks quality tests** on every table in the chain
-4. **Checks pipeline runs** for any pipelines in lineage
-5. **Identifies root cause** — first node where tests show `Failed`
-6. **Finds the owner** — who to contact
-7. **Tags the asset** — applies `DataQuality.Failing` tag in OpenMetadata
-8. **Generates report** — structured JSON, every claim backed by tool output
+1. **Search** — finds the asset in OpenMetadata by name
+2. **Traverse lineage** — walks the upstream graph, up to 10+ nodes
+3. **Check quality tests** — runs `get_quality_tests` on every table in the chain
+4. **Check pipeline runs** — inspects Airflow execution history for pipeline nodes
+5. **Identify root cause** — first node where quality tests show `Failed`
+6. **Find the owner** — resolves the data owner to contact
+7. **Tag the asset** — writes `DataQuality.Failing` governance tag in OpenMetadata
+8. **Generate report** — structured incident report, every claim traceable to a tool call
 
-### What you'll see
+### What you'll see in the UI
 
-- **Confidence bar** — climbs from 0% to 100% as the investigation progresses
-- **Live timeline** — each tool call appears in real time with its inputs
-- **Lineage graph** — interactive React Flow diagram, failing node highlighted in red with directional arrows
-- **Incident report** — severity badge, root cause, evidence, lineage path, failing tests, recommended action
-- **History tab** — MTTR stats, severity trend chart, replay any past investigation
+- **Confidence bar** — climbs 0% → 100% as investigation progresses
+- **Live timeline** — each tool call appears as it happens, with inputs shown
+- **Lineage graph** — interactive React Flow diagram; failing node highlighted in red
+- **Incident report** — severity badge, root cause, evidence, lineage path, recommended action
+- **History dashboard** — MTTR chart, severity trend, replay any past investigation
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 DataSheriff/
-├── seed_and_run.sh                    ← one command to set up everything
+├── seed_and_run.sh                    ← one-command setup
 ├── openmetadata-docker/
-│   └── docker-compose-postgres.yml   ← starts OpenMetadata + Airflow
+│   └── docker-compose-postgres.yml   ← OpenMetadata + Airflow stack
 ├── backend/
 │   ├── agent.py                       ← Claude AI investigation agent
-│   ├── main.py                        ← FastAPI server with SSE streaming
-│   ├── mcp_server.py                  ← 6 MCP tools wrapping OpenMetadata APIs
-│   ├── setup_demo.py                  ← one-time demo data setup
+│   ├── main.py                        ← FastAPI server + SSE streaming
+│   ├── mcp_server.py                  ← 6 MCP tools → OpenMetadata APIs
+│   ├── setup_demo.py                  ← one-time lineage seeding script
 │   ├── requirements.txt
 │   ├── .env.example
-│   └── .env                           ← OM token only (not committed)
+│   └── .env                           ← OM token only
 └── frontend/
     └── src/
-        ├── App.jsx                    ← main app, SSE handler, tab navigation
+        ├── App.jsx                    ← main app, SSE handler, tab routing
         ├── hooks/
         │   ├── useHistory.js          ← investigation history + MTTR stats
-        │   └── useApiKey.js           ← API key localStorage management
+        │   └── useApiKey.js           ← localStorage API key management
         └── components/
             ├── InvestigationTimeline.jsx  ← live stream + confidence bar
             ├── LineageGraph.jsx           ← React Flow lineage visualization
@@ -394,108 +439,51 @@ DataSheriff/
 
 ---
 
-## MCP Tools
+## 🔐 API Key Security Architecture
 
-DataSheriff uses 6 custom MCP tools wrapping OpenMetadata's REST APIs:
-
-| Tool | OpenMetadata API | Purpose |
-|------|-----------------|---------| 
-| `search_assets(query)` | `GET /search/query` | Find assets by name |
-| `get_lineage(entity_id, entity_type)` | `GET /lineage/{type}/{id}` | Trace upstream graph |
-| `get_quality_tests(table_fqn)` | `GET /dataQuality/testCases` | Check test results |
-| `get_pipeline_runs(pipeline_fqn)` | `GET /pipelines/{id}/status` | Check run history |
-| `get_asset_owner(entity_fqn)` | `GET /tables/name/{fqn}` | Find data owner |
-| `tag_asset_failing(entity_fqn)` | `PATCH /tables/{id}` | Apply DataQuality.Failing tag |
-
----
-
-## API Key Architecture
-
-DataSheriff is designed so the server operator never needs to store or manage Anthropic API keys:
+DataSheriff is zero-trust by design — the server operator never needs to manage Anthropic API keys:
 
 ```
 User's browser
-  └── localStorage: sk-ant-xxxx  ← stored here only
-        ↓
+  └── localStorage: sk-ant-xxxx    ← only copy, never sent to server storage
+
   POST /investigate
-  Header: X-Anthropic-Key: sk-ant-xxxx   ← sent as header
+  Header: X-Anthropic-Key: sk-ant-xxxx   ← sent per-request in header
         ↓
-  FastAPI reads header → passes to Claude agent
+  FastAPI extracts header → passes to Claude agent
         ↓
-  Claude API called with user's key
+  Anthropic API called with user's key
+        ↓
+  SSE stream → browser
 ```
 
-The server only needs `OPENMETADATA_TOKEN` in its `.env`. Each user pays for their own Claude usage. No shared API key, no credit risk.
+The server only needs `OPENMETADATA_TOKEN` in `.env`. Each user pays for their own Claude usage. No shared keys, no credit risk, no liability.
 
 ---
 
-## Troubleshooting
+## 🧩 MCP Tools Reference
 
-**Airflow not accessible at http://localhost:8080**
+All 6 tools are implemented as `@mcp.tool()` async Python functions in `backend/mcp_server.py`, invoked directly by the agent loop in `backend/agent.py`.
 
-Airflow can take 5-10 minutes to start on first run, especially on slower machines or WSL. Check container status:
-```bash
-docker ps --filter name=openmetadata_ingestion
-```
+| Tool | HTTP calls made | Purpose |
+|---|---|---|
+| `search_assets(query)` | `GET /api/v1/search/query` | Full-text search across tables, dashboards, pipelines, topics |
+| `get_lineage(entity_id, entity_type)` | `GET /api/v1/lineage/{type}/{id}?upstreamDepth=3&downstreamDepth=1` | Walk upstream lineage graph up to 3 hops |
+| `get_quality_tests(table_fqn)` | `GET /api/v1/dataQuality/testCases?entityLink=<#E::table::fqn>` | Fetch latest test results (pass/fail/aborted) per table |
+| `get_pipeline_runs(pipeline_fqn)` | `GET /api/v1/pipelines/name/{fqn}` → `GET /api/v1/pipelines/{id}/status` | Resolve pipeline by FQN, then fetch last 10 run statuses |
+| `get_asset_owner(entity_fqn, entity_type)` | `GET /api/v1/{entity_type}s/name/{fqn}?fields=owner` | Resolve owner (user or team) for any entity type |
+| `tag_asset_failing(entity_fqn, entity_type)` | `GET /api/v1/{entity_type}s/name/{fqn}?fields=tags` → `PATCH /api/v1/{entity_type}s/{id}` | Idempotent: reads existing tags, skips if already tagged, otherwise writes `DataQuality.Failing` via JSON-Patch |
 
-Watch the logs:
-```bash
-docker compose -f openmetadata-docker/docker-compose-postgres.yml logs -f openmetadata_ingestion
-```
-
-Wait until you see "Airflow webserver is ready" or similar. Once ready, you can access it at http://localhost:8080.
-
-**Investigation fails with "Invalid Anthropic API key"**
-
-Go to ⚙️ Settings and verify your key starts with `sk-ant-` and has been saved correctly.
-
-**`Connection error` from the backend**
-
-Check for a conflicting `ANTHROPIC_BASE_URL` environment variable (common with Ollama):
-```powershell
-echo $env:ANTHROPIC_BASE_URL          # Windows
-echo $ANTHROPIC_BASE_URL              # Mac/Linux
-```
-If set, clear it and restart uvicorn.
-
-**OpenMetadata not reachable after `docker compose up`**
-
-Takes 3–5 minutes on first run. Watch:
-```bash
-docker compose -f openmetadata-docker/docker-compose-postgres.yml logs -f openmetadata_server
-```
-Wait until you see `Started ServerConnector`.
-
-**Sample data not appearing in OpenMetadata**
-
-Trigger the 4 Airflow DAGs in order and wait for each green ✅. Re-trigger any that failed.
-
-**Token expired (401 errors from backend)**
-
-```bash
-curl -s -X POST "http://localhost:8585/api/v1/users/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@open-metadata.org","password":"admin"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])"
-```
-Update `OPENMETADATA_TOKEN` in `backend/.env` and restart uvicorn.
-
-**`setup_demo.py` says "orders dashboard not found"**
-
-The `sample_data` DAG hasn't finished. Wait for green ✅ then re-run `python3 setup_demo.py`.
-
-**DataQuality.Failing tag fails to apply**
-
-The tag classification must exist in OpenMetadata first. Go to Govern → Classifications → create a classification called `DataQuality` with a tag called `Failing`. Then re-run an investigation.
+All tools are async, fault-tolerant, and return structured JSON that the agent reasons over.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|---|---|
 | AI Agent | Claude Sonnet 4.6 (Anthropic) |
-| Agent Protocol | MCP (Model Context Protocol) |
+| Agent Protocol | MCP (Model Context Protocol) via FastMCP |
 | Backend | Python 3.11, FastAPI, uvicorn |
 | HTTP Client | httpx (async) |
 | Streaming | Server-Sent Events (SSE) |
@@ -506,18 +494,32 @@ The tag classification must exist in OpenMetadata first. Go to Govern → Classi
 | Pipeline Orchestration | Apache Airflow 2.x |
 | Database | PostgreSQL |
 | Search | Elasticsearch |
-| Deployment | Cloudflare Workers (frontend), DigitalOcean (backend) |
+| Frontend Hosting | Cloudflare Workers |
+| Backend Hosting | DigitalOcean Droplet |
 
 ---
 
-## Built With
+## 🎯 Hackathon Alignment
+
+| Judging Criterion | How DataSheriff addresses it |
+|---|---|
+| **Potential Impact** | Data pipeline debugging is a universal pain point. Reducing MTTR from hours to seconds is measurable, real-world value for every data team. |
+| **Creativity & Innovation** | First tool to combine OpenMetadata lineage traversal + quality test inspection + automatic governance tagging into a single agentic investigation loop |
+| **Technical Excellence** | Streaming SSE, MCP tool protocol, async Python, React Flow, BYOK security model, zero-hardcoded-data honesty enforcement |
+| **Best Use of OpenMetadata** | Touches 6 API surfaces: search, lineage, data quality, pipeline status, ownership, and tag governance — all in a coordinated agent workflow |
+| **User Experience** | Live confidence bar, streaming timeline, interactive lineage graph, MTTR history dashboard — investigation feels like watching a detective work |
+| **Presentation Quality** | Live deployed app, full demo video, comprehensive README, real data producing real results |
+
+---
+
+## 🔗 Built With
 
 - [OpenMetadata](https://open-metadata.org/) — open source data catalog and governance platform
 - [Anthropic Claude](https://anthropic.com/) — AI backbone for the investigation agent
-- [WeMakeDevs × OpenMetadata Hackathon](https://www.wemakedevs.org/hackathons/openmetadata)
+- [WeMakeDevs × OpenMetadata Hackathon 2026](https://www.wemakedevs.org/hackathons/openmetadata)
 
 ---
 
-## License
+## 📄 License
 
 MIT
