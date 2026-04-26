@@ -499,18 +499,6 @@ All tools are async, fault-tolerant, and return structured JSON that the agent r
 
 ---
 
-## 🎯 Hackathon Alignment
-
-| Judging Criterion | How DataSheriff addresses it |
-|---|---|
-| **Potential Impact** | Data pipeline debugging is a universal pain point. Reducing MTTR from hours to seconds is measurable, real-world value for every data team. |
-| **Creativity & Innovation** | First tool to combine OpenMetadata lineage traversal + quality test inspection + automatic governance tagging into a single agentic investigation loop |
-| **Technical Excellence** | Streaming SSE, MCP tool protocol, async Python, React Flow, BYOK security model, zero-hardcoded-data honesty enforcement |
-| **Best Use of OpenMetadata** | Touches 6 API surfaces: search, lineage, data quality, pipeline status, ownership, and tag governance — all in a coordinated agent workflow |
-| **User Experience** | Live confidence bar, streaming timeline, interactive lineage graph, MTTR history dashboard — investigation feels like watching a detective work |
-| **Presentation Quality** | Live deployed app, full demo video, comprehensive README, real data producing real results |
-
----
 
 ## 🔗 Built With
 
