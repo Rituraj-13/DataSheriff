@@ -9,12 +9,13 @@ import { useApiKey } from './hooks/useApiKey'
 import './App.css'
 
 const SAMPLE_QUERIES = [
-  'dim_address table is failing data quality checks',
-  'raw_customer table has incorrect data',
+  // 'dim_address table is failing data quality checks',
+  // 'raw_customer table has incorrect data',
   'The orders dashboard is showing wrong data',
   'The fact_orders table has missing data since this morning',
 ]
 
+// const API_BASE = 'http://localhost:8000' 
 const API_BASE = 'https://backend.riturajdey.dev'
 
 export default function App() {
