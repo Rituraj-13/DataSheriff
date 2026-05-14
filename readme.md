@@ -10,7 +10,6 @@ Built for the **WeMakeDevs × OpenMetadata Hackathon 2026**
 
 | | |
 |---|---|
-| **Live App** | [https://datasheriff.riturajdey01.workers.dev/](https://datasheriff.riturajdey01.workers.dev/) |
 | **Demo Video** | [https://youtu.be/FJjLcWuaQ0M](https://youtu.be/FJjLcWuaQ0M) |
 | **GitHub** | [https://github.com/Rituraj-13/DataSheriff](https://github.com/Rituraj-13/DataSheriff) |
 
